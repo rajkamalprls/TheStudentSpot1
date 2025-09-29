@@ -1,13 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { 
-  Users, Briefcase, Calendar, TrendingUp, 
-  Award, Building2, Target, MessageSquare, Rocket,
-  Plus, Search, Filter, MapPin, Clock, Star, ChevronRight,
-  FileText, Video, Globe, Mail, Phone, UserCheck,
-  BarChart3, Eye, Edit, Share2, Download, Trophy,
-  Lightbulb, DollarSign, BookOpen, Handshake
-} from 'lucide-react';
+import { Users, Briefcase, Calendar, TrendingUp, Award, Building2, Target, MessageSquare, Rocket, Plus, Search, Filter, MapPin, Clock, Star, ChevronRight, FileText, Video, Globe, Mail, Phone, UserCheck, BarChart3, Eye, CreditCard as Edit, Share2, Download, Trophy, Lightbulb, DollarSign, BookOpen, Handshake } from 'lucide-react';
 
 export function IncubatorDashboard() {
   const { user } = useAuth();

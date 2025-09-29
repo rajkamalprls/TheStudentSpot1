@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { 
-  Users, Briefcase, Calendar, TrendingUp, 
-  Award, Building2, Target, MessageSquare, Search,
-  Plus, Filter, MapPin, Clock, Star, ChevronRight,
-  FileText, Video, Globe, Mail, Phone, UserCheck,
-  BarChart3, Eye, Edit, Share2, Download
-} from 'lucide-react';
+import { Users, Briefcase, Calendar, TrendingUp, Award, Building2, Target, MessageSquare, Search, Plus, Filter, MapPin, Clock, Star, ChevronRight, FileText, Video, Globe, Mail, Phone, UserCheck, BarChart3, Eye, CreditCard as Edit, Share2, Download } from 'lucide-react';
 
 export function CompanyDashboard() {
   const { user } = useAuth();

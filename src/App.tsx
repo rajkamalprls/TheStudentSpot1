@@ -1,6 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { DataProvider } from './context/DataContext';
+import { useData } from './context/DataContext';
+import { NotificationToast } from './components/common/NotificationToast';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { Home } from './pages/Home';
@@ -19,6 +22,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
+  const { notifications, clearNotifications } = useData();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -67,6 +71,17 @@ function AppRoutes() {
         </Routes>
       </main>
       <Footer />
+      
+      {/* Notifications */}
+      <div className="fixed top-4 right-4 z-50 space-y-2">
+        {notifications.map((notification, index) => (
+          <NotificationToast
+            key={index}
+            message={notification}
+            onClose={() => clearNotifications()}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -74,9 +89,11 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
+      <DataProvider>
+        <Router>
+          <AppRoutes />
+        </Router>
+      </DataProvider>
     </AuthProvider>
   );
 }

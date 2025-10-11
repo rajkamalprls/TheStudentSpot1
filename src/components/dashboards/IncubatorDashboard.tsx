@@ -4,7 +4,10 @@ import { Users, Briefcase, Calendar, TrendingUp, Award, Building2, Target, Messa
 
 export function IncubatorDashboard() {
   const { user } = useAuth();
+  const { startups, events, onboardStartup, updateStartupProgress, createEvent } = useData();
   const [activeSection, setActiveSection] = useState('overview');
+  const [showOnboardModal, setShowOnboardModal] = useState(false);
+  const [showEventModal, setShowEventModal] = useState(false);
 
   const stats = [
     { icon: <Rocket className="w-5 h-5" />, label: 'Active Startups', value: '47', color: 'red' },
@@ -208,7 +211,10 @@ export function IncubatorDashboard() {
                   <Plus className="w-8 h-8 text-red-600 mb-2" />
                   <span className="text-sm font-medium">Add Startup</span>
                 </button>
-                <button className="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 transition-colors">
+                <button 
+                  className="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 transition-colors"
+                  onClick={() => setShowEventModal(true)}
+                >
                   <Trophy className="w-8 h-8 text-purple-600 mb-2" />
                   <span className="text-sm font-medium">Create Challenge</span>
                 </button>
@@ -227,30 +233,25 @@ export function IncubatorDashboard() {
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <h2 className="text-xl font-bold text-gray-900 mb-6">📋 Recent Activities</h2>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                      <Rocket className="w-5 h-5 text-red-600" />
+                {startups.slice(0, 3).map((startup) => (
+                  <div key={startup.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                        <Rocket className="w-5 h-5 text-red-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">{startup.name} - {startup.progress}% progress</h4>
+                        <p className="text-sm text-gray-600">Founded by {startup.founder} • {startup.stage}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">EcoTech Solutions completed MVP milestone</h4>
-                      <p className="text-sm text-gray-600">2 hours ago</p>
-                    </div>
+                    <button 
+                      className="text-red-600 hover:text-red-700 text-sm font-medium"
+                      onClick={() => updateStartupProgress(startup.id, Math.min(startup.progress + 10, 100))}
+                    >
+                      Update Progress
+                    </button>
                   </div>
-                  <button className="text-red-600 hover:text-red-700 text-sm font-medium">View Details</button>
-                </div>
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                      <Users className="w-5 h-5 text-red-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">New startup application from HealthAI</h4>
-                      <p className="text-sm text-gray-600">1 day ago</p>
-                    </div>
-                  </div>
-                  <button className="text-red-600 hover:text-red-700 text-sm font-medium">Review</button>
-                </div>
+                ))}
               </div>
             </div>
           </div>
@@ -266,21 +267,24 @@ export function IncubatorDashboard() {
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Active Startups</h3>
-                  <button className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                  <button 
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                    onClick={() => setShowOnboardModal(true)}
+                  >
                     + Onboard New Startup
                   </button>
                 </div>
                 
                 <div className="space-y-6">
-                  {activeStartups.map((startup, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                  {startups.map((startup) => (
+                    <div key={startup.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <h4 className="text-lg font-semibold text-gray-900 mb-1">{startup.name}</h4>
                           <p className="text-gray-600 text-sm">Founded by {startup.founder}</p>
                         </div>
                         <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-                          startup.stage === 'MVP' ? 'bg-green-100 text-green-800' :
+                          startup.stage === 'mvp' ? 'bg-green-100 text-green-800' :
                           startup.stage === 'Prototype' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-blue-100 text-blue-800'
                         }`}>
@@ -303,7 +307,7 @@ export function IncubatorDashboard() {
                         </div>
                         <div>
                           <p className="text-gray-600 text-sm">Mentor</p>
-                          <p className="font-medium">{startup.mentor}</p>
+                          <p className="font-medium">{startup.mentor || 'Not assigned'}</p>
                         </div>
                       </div>
                       
@@ -720,6 +724,97 @@ export function IncubatorDashboard() {
             {renderContent()}
           </div>
         </div>
+
+        {/* Onboard Startup Modal */}
+        {showOnboardModal && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen px-4">
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={() => setShowOnboardModal(false)} />
+              <div className="bg-white rounded-lg p-6 w-full max-w-lg relative">
+                <h3 className="text-lg font-semibold mb-4">Onboard New Startup</h3>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.target as HTMLFormElement);
+                  onboardStartup({
+                    name: formData.get('name') as string,
+                    founder: formData.get('founder') as string,
+                    stage: formData.get('stage') as 'idea' | 'mvp' | 'prototype' | 'seed' | 'series-a',
+                    sector: formData.get('sector') as string,
+                    fundingRaised: formData.get('fundingRaised') as string,
+                    teamSize: parseInt(formData.get('teamSize') as string),
+                    progress: 10,
+                    joinedDate: new Date().toLocaleDateString()
+                  });
+                  setShowOnboardModal(false);
+                }}>
+                  <div className="space-y-4">
+                    <input name="name" placeholder="Startup Name" className="w-full p-2 border rounded" required />
+                    <input name="founder" placeholder="Founder Name" className="w-full p-2 border rounded" required />
+                    <select name="stage" className="w-full p-2 border rounded" required>
+                      <option value="">Select Stage</option>
+                      <option value="idea">Idea</option>
+                      <option value="mvp">MVP</option>
+                      <option value="prototype">Prototype</option>
+                      <option value="seed">Seed</option>
+                      <option value="series-a">Series A</option>
+                    </select>
+                    <input name="sector" placeholder="Sector (e.g., FinTech, HealthTech)" className="w-full p-2 border rounded" required />
+                    <input name="fundingRaised" placeholder="Funding Raised (e.g., ₹10L)" className="w-full p-2 border rounded" required />
+                    <input name="teamSize" type="number" placeholder="Team Size" className="w-full p-2 border rounded" required />
+                  </div>
+                  <div className="flex space-x-4 mt-6">
+                    <button type="submit" className="flex-1 bg-red-600 text-white py-2 rounded">Onboard Startup</button>
+                    <button type="button" onClick={() => setShowOnboardModal(false)} className="flex-1 border py-2 rounded">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Create Event Modal */}
+        {showEventModal && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen px-4">
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={() => setShowEventModal(false)} />
+              <div className="bg-white rounded-lg p-6 w-full max-w-lg relative">
+                <h3 className="text-lg font-semibold mb-4">Create New Event</h3>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.target as HTMLFormElement);
+                  createEvent({
+                    title: formData.get('title') as string,
+                    type: formData.get('type') as 'webinar' | 'workshop' | 'hackathon' | 'networking',
+                    date: formData.get('date') as string,
+                    time: formData.get('time') as string,
+                    organizer: user?.name || 'Incubator',
+                    description: formData.get('description') as string,
+                    maxCapacity: parseInt(formData.get('maxCapacity') as string)
+                  });
+                  setShowEventModal(false);
+                }}>
+                  <div className="space-y-4">
+                    <input name="title" placeholder="Event Title" className="w-full p-2 border rounded" required />
+                    <select name="type" className="w-full p-2 border rounded" required>
+                      <option value="">Select Type</option>
+                      <option value="hackathon">Hackathon</option>
+                      <option value="workshop">Workshop</option>
+                      <option value="webinar">Webinar</option>
+                      <option value="networking">Networking</option>
+                    </select>
+                    <input name="date" type="date" className="w-full p-2 border rounded" required />
+                    <input name="time" placeholder="Time (e.g., 10:00 AM - 6:00 PM)" className="w-full p-2 border rounded" required />
+                    <input name="maxCapacity" type="number" placeholder="Max Participants" className="w-full p-2 border rounded" required />
+                    <textarea name="description" placeholder="Event Description" className="w-full p-2 border rounded h-20" required />
+                  </div>
+                  <div className="flex space-x-4 mt-6">
+                    <button type="submit" className="flex-1 bg-red-600 text-white py-2 rounded">Create Event</button>
+                    <button type="button" onClick={() => setShowEventModal(false)} className="flex-1 border py-2 rounded">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

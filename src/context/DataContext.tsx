@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface Job {
   id: string;
@@ -22,6 +23,41 @@ interface Application {
   company: string;
   appliedDate: string;
   status: 'applied' | 'under-review' | 'interview-scheduled' | 'rejected' | 'accepted';
+}
+
+interface Startup {
+  id: string;
+  name: string;
+  founder: string;
+  stage: 'idea' | 'mvp' | 'prototype' | 'seed' | 'series-a';
+  sector: string;
+  fundingRaised: string;
+  teamSize: number;
+  mentor?: string;
+  progress: number;
+  joinedDate: string;
+}
+
+interface Mentor {
+  id: string;
+  name: string;
+  expertise: string;
+  experience: string;
+  rating: number;
+  sessions: number;
+  price: string;
+  available: boolean;
+}
+
+interface Company {
+  id: string;
+  name: string;
+  industry: string;
+  size: string;
+  location: string;
+  jobsPosted: number;
+  studentsHired: number;
+  partnershipType: string;
 }
 
 interface Course {
@@ -57,6 +93,7 @@ interface DataContextType {
   jobs: Job[];
   applications: Application[];
   applyToJob: (jobId: string) => void;
+  postJob: (job: Omit<Job, 'id'>) => void;
   
   // Courses
   courses: Course[];
@@ -66,6 +103,24 @@ interface DataContextType {
   // Events
   events: Event[];
   registerForEvent: (eventId: string) => void;
+  createEvent: (event: Omit<Event, 'id' | 'registrations' | 'registered'>) => void;
+  
+  // Startups (for Incubators)
+  startups: Startup[];
+  onboardStartup: (startup: Omit<Startup, 'id'>) => void;
+  updateStartupProgress: (startupId: string, progress: number) => void;
+  
+  // Mentors
+  mentors: Mentor[];
+  bookMentor: (mentorId: string) => void;
+  
+  // Companies (for Colleges)
+  companies: Company[];
+  addCompanyPartnership: (company: Omit<Company, 'id'>) => void;
+  
+  // Placements (for Colleges)
+  placements: any[];
+  addPlacement: (placement: any) => void;
   
   // Notifications
   notifications: string[];
@@ -78,8 +133,9 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export function DataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   
-  // Sample data
-  const [jobs] = useState<Job[]>([
+  // Use localStorage for persistence
+  const [jobs, setJobs] = useLocalStorage<Job[]>('jobs', [
+  
     {
       id: '1',
       title: 'Frontend Developer Intern',
@@ -121,9 +177,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   ]);
 
-  const [applications, setApplications] = useState<Application[]>([]);
+  const [applications, setApplications] = useLocalStorage<Application[]>('applications', []);
   
-  const [courses, setCourses] = useState<Course[]>([
+  const [courses, setCourses] = useLocalStorage<Course[]>('courses', [
     {
       id: '1',
       title: 'Complete React.js Bootcamp',
@@ -154,7 +210,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   ]);
 
-  const [events, setEvents] = useState<Event[]>([
+  const [events, setEvents] = useLocalStorage<Event[]>('events', [
     {
       id: '1',
       title: 'React.js Masterclass',
@@ -181,6 +237,80 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   ]);
 
+  const [startups, setStartups] = useLocalStorage<Startup[]>('startups', [
+    {
+      id: '1',
+      name: 'EcoTech Solutions',
+      founder: 'Arjun Patel',
+      stage: 'mvp',
+      sector: 'CleanTech',
+      fundingRaised: '₹25L',
+      teamSize: 4,
+      mentor: 'Dr. Sharma',
+      progress: 65,
+      joinedDate: 'Jan 2025'
+    },
+    {
+      id: '2',
+      name: 'HealthAI',
+      founder: 'Priya Reddy',
+      stage: 'prototype',
+      sector: 'HealthTech',
+      fundingRaised: '₹15L',
+      teamSize: 3,
+      mentor: 'Mr. Kumar',
+      progress: 45,
+      joinedDate: 'Dec 2024'
+    }
+  ]);
+
+  const [mentors, setMentors] = useLocalStorage<Mentor[]>('mentors', [
+    {
+      id: '1',
+      name: 'Dr. Rajesh Sharma',
+      expertise: 'Technology & Product',
+      experience: '15+ years at Google, Microsoft',
+      rating: 4.9,
+      sessions: 120,
+      price: '₹2,000/session',
+      available: true
+    },
+    {
+      id: '2',
+      name: 'Priya Gupta',
+      expertise: 'Marketing & Growth',
+      experience: '12+ years at Flipkart, Zomato',
+      rating: 4.8,
+      sessions: 95,
+      price: '₹1,500/session',
+      available: true
+    }
+  ]);
+
+  const [companies, setCompanies] = useLocalStorage<Company[]>('companies', [
+    {
+      id: '1',
+      name: 'TCS',
+      industry: 'IT Services',
+      size: '500,000+ employees',
+      location: 'Mumbai',
+      jobsPosted: 45,
+      studentsHired: 156,
+      partnershipType: 'Premium Partner'
+    },
+    {
+      id: '2',
+      name: 'Microsoft',
+      industry: 'Technology',
+      size: '10,000+ employees',
+      location: 'Hyderabad',
+      jobsPosted: 12,
+      studentsHired: 28,
+      partnershipType: 'Premium Partner'
+    }
+  ]);
+
+  const [placements, setPlacements] = useLocalStorage<any[]>('placements', []);
   const [notifications, setNotifications] = useState<string[]>([]);
 
   const applyToJob = (jobId: string) => {
@@ -197,6 +327,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setApplications(prev => [...prev, newApplication]);
       addNotification(`Successfully applied to ${job.title} at ${job.company}`);
     }
+  };
+
+  const postJob = (jobData: Omit<Job, 'id'>) => {
+    const newJob: Job = {
+      id: Date.now().toString(),
+      ...jobData
+    };
+    setJobs(prev => [newJob, ...prev]);
+    addNotification(`Successfully posted job: ${jobData.title}`);
   };
 
   const enrollInCourse = (courseId: string) => {
@@ -231,6 +370,61 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const createEvent = (eventData: Omit<Event, 'id' | 'registrations' | 'registered'>) => {
+    const newEvent: Event = {
+      id: Date.now().toString(),
+      registrations: 0,
+      registered: false,
+      ...eventData
+    };
+    setEvents(prev => [newEvent, ...prev]);
+    addNotification(`Successfully created event: ${eventData.title}`);
+  };
+
+  const onboardStartup = (startupData: Omit<Startup, 'id'>) => {
+    const newStartup: Startup = {
+      id: Date.now().toString(),
+      ...startupData
+    };
+    setStartups(prev => [newStartup, ...prev]);
+    addNotification(`Successfully onboarded startup: ${startupData.name}`);
+  };
+
+  const updateStartupProgress = (startupId: string, progress: number) => {
+    setStartups(prev => prev.map(startup => 
+      startup.id === startupId 
+        ? { ...startup, progress }
+        : startup
+    ));
+    addNotification(`Updated startup progress to ${progress}%`);
+  };
+
+  const bookMentor = (mentorId: string) => {
+    const mentor = mentors.find(m => m.id === mentorId);
+    if (mentor) {
+      addNotification(`Successfully booked session with ${mentor.name}`);
+    }
+  };
+
+  const addCompanyPartnership = (companyData: Omit<Company, 'id'>) => {
+    const newCompany: Company = {
+      id: Date.now().toString(),
+      ...companyData
+    };
+    setCompanies(prev => [newCompany, ...prev]);
+    addNotification(`Successfully added partnership with ${companyData.name}`);
+  };
+
+  const addPlacement = (placementData: any) => {
+    const newPlacement = {
+      id: Date.now().toString(),
+      ...placementData,
+      date: new Date().toLocaleDateString()
+    };
+    setPlacements(prev => [newPlacement, ...prev]);
+    addNotification(`Successfully recorded placement: ${placementData.studentName} at ${placementData.company}`);
+  };
+
   const addNotification = (message: string) => {
     setNotifications(prev => [message, ...prev.slice(0, 4)]);
     setTimeout(() => {
@@ -246,11 +440,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
     jobs,
     applications,
     applyToJob,
+    postJob,
     courses,
     enrollInCourse,
     updateCourseProgress,
     events,
     registerForEvent,
+    createEvent,
+    startups,
+    onboardStartup,
+    updateStartupProgress,
+    mentors,
+    bookMentor,
+    companies,
+    addCompanyPartnership,
+    placements,
+    addPlacement,
     notifications,
     addNotification,
     clearNotifications

@@ -13,12 +13,14 @@ import {
 
 export function StudentDashboard() {
   const { user } = useAuth();
-  const { jobs, applications, courses, events, applyToJob, enrollInCourse, registerForEvent } = useData();
+  const { jobs, applications, courses, events, mentors, applyToJob, enrollInCourse, registerForEvent, bookMentor } = useData();
   const [activeSection, setActiveSection] = useState('overview');
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
+  const [selectedMentor, setSelectedMentor] = useState<any>(null);
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
+  const [isMentorModalOpen, setIsMentorModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const stats = [
@@ -545,21 +547,73 @@ export function StudentDashboard() {
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <h2 className="text-xl font-bold text-gray-900 mb-6">👥 Mentorship Zone</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {mentorshipOptions.map((option, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{option.type}</h3>
-                  <p className="text-gray-600 text-sm mb-4">{option.description}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-green-600 text-sm font-medium">
-                      {typeof option.available === 'number' ? `${option.available} available` : option.available}
-                    </span>
-                    <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                      Connect →
-                    </button>
-                  </div>
+            <div className="space-y-8">
+              {/* Available Mentors */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Mentors</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {mentors.map((mentor) => (
+                    <div key={mentor.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h4 className="text-lg font-semibold text-gray-900 mb-1">{mentor.name}</h4>
+                          <p className="text-blue-600 font-medium">{mentor.expertise}</p>
+                          <p className="text-gray-600 text-sm">{mentor.experience}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="flex items-center space-x-1 mb-1">
+                            <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                            <span className="font-medium">{mentor.rating}</span>
+                          </div>
+                          <p className="text-gray-600 text-sm">{mentor.sessions} sessions</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-green-600 font-medium">{mentor.price}</span>
+                        <div className="flex space-x-2">
+                          <button 
+                            className="px-4 py-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                            onClick={() => {
+                              setSelectedMentor(mentor);
+                              setIsMentorModalOpen(true);
+                            }}
+                          >
+                            View Profile
+                          </button>
+                          <button 
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                            onClick={() => bookMentor(mentor.id)}
+                            disabled={!mentor.available}
+                          >
+                            {mentor.available ? 'Book Session' : 'Unavailable'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              {/* Mentorship Options */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Mentorship Programs</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {mentorshipOptions.map((option, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">{option.type}</h4>
+                      <p className="text-gray-600 text-sm mb-4">{option.description}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-green-600 text-sm font-medium">
+                          {typeof option.available === 'number' ? `${option.available} available` : option.available}
+                        </span>
+                        <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                          Join Program →
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -863,6 +917,66 @@ export function StudentDashboard() {
                 <button 
                   className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                   onClick={() => setIsCourseModalOpen(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
+        </Modal>
+
+        {/* Mentor Details Modal */}
+        <Modal
+          isOpen={isMentorModalOpen}
+          onClose={() => setIsMentorModalOpen(false)}
+          title="Mentor Profile"
+          size="lg"
+        >
+          {selectedMentor && (
+            <div className="space-y-6">
+              <div className="flex items-start space-x-6">
+                <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 font-semibold text-xl">
+                    {selectedMentor.name.split(' ').map((n: string) => n[0]).join('')}
+                  </span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{selectedMentor.name}</h3>
+                  <p className="text-blue-600 font-medium mb-2">{selectedMentor.expertise}</p>
+                  <p className="text-gray-600 mb-4">{selectedMentor.experience}</p>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-1">
+                      <Star className="w-5 h-5 text-yellow-400 fill-current" />
+                      <span className="font-medium">{selectedMentor.rating}</span>
+                    </div>
+                    <span className="text-gray-600">{selectedMentor.sessions} sessions completed</span>
+                    <span className="font-medium text-green-600">{selectedMentor.price}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-2">About</h4>
+                <p className="text-gray-700">
+                  Experienced professional with deep expertise in {selectedMentor.expertise.toLowerCase()}. 
+                  Has mentored hundreds of students and professionals in their career journey.
+                </p>
+              </div>
+              
+              <div className="flex space-x-4">
+                <button 
+                  className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                  onClick={() => {
+                    bookMentor(selectedMentor.id);
+                    setIsMentorModalOpen(false);
+                  }}
+                  disabled={!selectedMentor.available}
+                >
+                  {selectedMentor.available ? 'Book Session' : 'Currently Unavailable'}
+                </button>
+                <button 
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  onClick={() => setIsMentorModalOpen(false)}
                 >
                   Close
                 </button>

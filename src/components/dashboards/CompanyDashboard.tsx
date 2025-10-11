@@ -4,7 +4,9 @@ import { Users, Briefcase, Calendar, TrendingUp, Award, Building2, Target, Messa
 
 export function CompanyDashboard() {
   const { user } = useAuth();
+  const { jobs, applications, postJob, applyToJob } = useData();
   const [activeSection, setActiveSection] = useState('overview');
+  const [showPostJobModal, setShowPostJobModal] = useState(false);
 
   const stats = [
     { icon: <Briefcase className="w-5 h-5" />, label: 'Active Jobs', value: '12', color: 'purple' },
@@ -193,36 +195,35 @@ export function CompanyDashboard() {
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <h2 className="text-xl font-bold text-gray-900 mb-6">📋 Recent Applications</h2>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                      <span className="text-purple-600 font-semibold">PS</span>
+                {applications.length > 0 ? (
+                  applications.slice(0, 5).map((application) => (
+                    <div key={application.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                          <span className="text-purple-600 font-semibold">
+                            {application.jobTitle.split(' ').map(w => w[0]).join('').slice(0, 2)}
+                          </span>
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-gray-900">Student Application</h4>
+                          <p className="text-sm text-gray-600">Applied for {application.jobTitle}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          application.status === 'applied' ? 'bg-blue-100 text-blue-800' :
+                          application.status === 'under-review' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {application.status.replace('-', ' ')}
+                        </span>
+                        <button className="text-purple-600 hover:text-purple-700 text-sm font-medium">Review</button>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">Priya Sharma</h4>
-                      <p className="text-sm text-gray-600">Applied for Software Developer Intern</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">New</span>
-                    <button className="text-purple-600 hover:text-purple-700 text-sm font-medium">Review</button>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                      <span className="text-purple-600 font-semibold">RK</span>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">Rahul Kumar</h4>
-                      <p className="text-sm text-gray-600">Applied for Frontend Developer</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Under Review</span>
-                    <button className="text-purple-600 hover:text-purple-700 text-sm font-medium">Review</button>
-                  </div>
-                </div>
+                  ))
+                ) : (
+                  <p className="text-gray-600 text-center py-8">No applications yet. Post jobs to start receiving applications!</p>
+                )}
               </div>
             </div>
           </div>
@@ -324,14 +325,17 @@ export function CompanyDashboard() {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Active Job Postings</h3>
-                <button className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                <button 
+                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                  onClick={() => setShowPostJobModal(true)}
+                >
                   + Post New Job
                 </button>
               </div>
               
               <div className="space-y-4">
-                {activeJobs.map((job, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                {jobs.filter(job => job.status === 'active').map((job) => (
+                  <div key={job.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between mb-4">
                       <div>
                         <h4 className="text-lg font-semibold text-gray-900 mb-1">{job.title}</h4>
@@ -342,12 +346,12 @@ export function CompanyDashboard() {
                           </span>
                           <span className="flex items-center">
                             <Clock className="w-4 h-4 mr-1" />
-                            {job.posted}
+                            {job.postedDate}
                           </span>
                         </div>
                       </div>
                       <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-                        job.type === 'Internship' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                        job.type === 'internship' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
                       }`}>
                         {job.type}
                       </span>
@@ -356,19 +360,19 @@ export function CompanyDashboard() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                       <div>
                         <p className="text-gray-600 text-sm">Applications</p>
-                        <p className="font-medium text-green-600">{job.applications}</p>
+                        <p className="font-medium text-green-600">{job.applications || 0}</p>
                       </div>
                       <div>
-                        <p className="text-gray-600 text-sm">Views</p>
-                        <p className="font-medium">{job.views}</p>
+                        <p className="text-gray-600 text-sm">Salary</p>
+                        <p className="font-medium">{job.salary}</p>
                       </div>
                       <div>
-                        <p className="text-gray-600 text-sm">Deadline</p>
-                        <p className="font-medium text-red-600">{job.deadline}</p>
+                        <p className="text-gray-600 text-sm">Company</p>
+                        <p className="font-medium">{job.company}</p>
                       </div>
                       <div>
                         <p className="text-gray-600 text-sm">Status</p>
-                        <p className="font-medium text-green-600">{job.status}</p>
+                        <p className="font-medium text-green-600">{job.status || 'active'}</p>
                       </div>
                     </div>
                     
@@ -654,6 +658,54 @@ export function CompanyDashboard() {
             {renderContent()}
           </div>
         </div>
+
+        {/* Post Job Modal */}
+        {showPostJobModal && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen px-4">
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={() => setShowPostJobModal(false)} />
+              <div className="bg-white rounded-lg p-6 w-full max-w-lg relative">
+                <h3 className="text-lg font-semibold mb-4">Post New Job</h3>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.target as HTMLFormElement);
+                  postJob({
+                    title: formData.get('title') as string,
+                    company: formData.get('company') as string,
+                    type: formData.get('type') as 'full-time' | 'internship' | 'part-time',
+                    location: formData.get('location') as string,
+                    salary: formData.get('salary') as string,
+                    description: formData.get('description') as string,
+                    requirements: (formData.get('requirements') as string).split(',').map(r => r.trim()),
+                    postedDate: 'Today',
+                    applications: 0,
+                    status: 'active'
+                  });
+                  setShowPostJobModal(false);
+                }}>
+                  <div className="space-y-4">
+                    <input name="title" placeholder="Job Title" className="w-full p-2 border rounded" required />
+                    <input name="company" placeholder="Company Name" className="w-full p-2 border rounded" required />
+                    <select name="type" className="w-full p-2 border rounded" required>
+                      <option value="">Select Type</option>
+                      <option value="full-time">Full-time</option>
+                      <option value="internship">Internship</option>
+                      <option value="part-time">Part-time</option>
+                    </select>
+                    <input name="location" placeholder="Location" className="w-full p-2 border rounded" required />
+                    <input name="salary" placeholder="Salary/Stipend" className="w-full p-2 border rounded" required />
+                    <textarea name="description" placeholder="Job Description" className="w-full p-2 border rounded h-20" required />
+                    <input name="requirements" placeholder="Requirements (comma separated)" className="w-full p-2 border rounded" required />
+                  </div>
+                  <div className="flex space-x-4 mt-6">
+                    <button type="submit" className="flex-1 bg-purple-600 text-white py-2 rounded">Post Job</button>
+                    <button type="button" onClick={() => setShowPostJobModal(false)} className="flex-1 border py-2 rounded">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

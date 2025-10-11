@@ -10,7 +10,11 @@ import {
 
 export function CollegeDashboard() {
   const { user } = useAuth();
+  const { companies, placements, jobs, addCompanyPartnership, addPlacement, postJob } = useData();
   const [activeSection, setActiveSection] = useState('overview');
+  const [showAddCompanyModal, setShowAddCompanyModal] = useState(false);
+  const [showAddPlacementModal, setShowAddPlacementModal] = useState(false);
+  const [showPostJobModal, setShowPostJobModal] = useState(false);
 
   const stats = [
     { icon: <Users className="w-5 h-5" />, label: 'Active Students', value: '2,847', color: 'orange' },
@@ -196,7 +200,10 @@ export function CollegeDashboard() {
                   <Calendar className="w-8 h-8 text-blue-600 mb-2" />
                   <span className="text-sm font-medium">Schedule Event</span>
                 </button>
-                <button className="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 transition-colors">
+                <button 
+                  className="flex flex-col items-center p-4 rounded-lg hover:bg-gray-50 transition-colors"
+                  onClick={() => setShowPostJobModal(true)}
+                >
                   <FileText className="w-8 h-8 text-green-600 mb-2" />
                   <span className="text-sm font-medium">Post Job</span>
                 </button>
@@ -401,36 +408,36 @@ export function CollegeDashboard() {
             <h2 className="text-xl font-bold text-gray-900 mb-6">🏢 Partner Companies</h2>
             
             <div className="space-y-6">
-              {partnerCompanies.map((company, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+              {companies.map((company) => (
+                <div key={company.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-1">{company.name}</h3>
-                      <p className="text-gray-600 text-sm">{company.type}</p>
+                      <p className="text-gray-600 text-sm">{company.industry}</p>
                     </div>
                     <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-                      company.status === 'Premium Partner' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'
+                      company.partnershipType === 'Premium Partner' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'
                     }`}>
-                      {company.status}
+                      {company.partnershipType}
                     </span>
                   </div>
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div>
+                      <p className="text-gray-600 text-sm">Jobs Posted</p>
+                      <p className="font-medium text-green-600">{company.jobsPosted}</p>
+                    </div>
+                    <div>
                       <p className="text-gray-600 text-sm">Students Hired</p>
-                      <p className="font-medium text-green-600">{company.students_hired}</p>
+                      <p className="font-medium">{company.studentsHired}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600 text-sm">Avg Package</p>
-                      <p className="font-medium">{company.avg_package}</p>
+                      <p className="text-gray-600 text-sm">Company Size</p>
+                      <p className="font-medium">{company.size}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600 text-sm">Next Visit</p>
-                      <p className="font-medium">{company.next_visit}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600 text-sm">Partnership</p>
-                      <p className="font-medium">3 years</p>
+                      <p className="text-gray-600 text-sm">Location</p>
+                      <p className="font-medium">{company.location}</p>
                     </div>
                   </div>
                   
@@ -450,7 +457,10 @@ export function CollegeDashboard() {
             </div>
             
             <div className="mt-8 text-center">
-              <button className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition-colors">
+              <button 
+                className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition-colors"
+                onClick={() => setShowAddCompanyModal(true)}
+              >
                 + Add New Partner
               </button>
             </div>
@@ -480,7 +490,10 @@ export function CollegeDashboard() {
                     <option>Full-time</option>
                     <option>Internship</option>
                   </select>
-                  <button className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors">
+                  <button 
+                    className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+                    onClick={() => setShowPostJobModal(true)}
+                  >
                     + Post Job
                   </button>
                 </div>
@@ -488,15 +501,15 @@ export function CollegeDashboard() {
             </div>
             
             <div className="space-y-4">
-              {jobPostings.map((job, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+              {jobs.slice(0, 5).map((job) => (
+                <div key={job.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-1">{job.title}</h3>
                       <p className="text-gray-600">{job.company}</p>
                     </div>
                     <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-                      job.type === 'Internship' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                      job.type === 'internship' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
                     }`}>
                       {job.type}
                     </span>
@@ -504,20 +517,20 @@ export function CollegeDashboard() {
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div>
-                      <p className="text-gray-600 text-sm">Duration</p>
-                      <p className="font-medium">{job.duration}</p>
+                      <p className="text-gray-600 text-sm">Location</p>
+                      <p className="font-medium">{job.location}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600 text-sm">{job.type === 'Internship' ? 'Stipend' : 'Salary'}</p>
-                      <p className="font-medium text-green-600">{job.type === 'Internship' ? job.stipend : job.salary}</p>
+                      <p className="text-gray-600 text-sm">Salary</p>
+                      <p className="font-medium text-green-600">{job.salary}</p>
                     </div>
                     <div>
                       <p className="text-gray-600 text-sm">Applications</p>
-                      <p className="font-medium">{job.applications}</p>
+                      <p className="font-medium">{job.applications || 0}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600 text-sm">Deadline</p>
-                      <p className="font-medium text-red-600">{job.deadline}</p>
+                      <p className="text-gray-600 text-sm">Posted</p>
+                      <p className="font-medium text-red-600">{job.postedDate}</p>
                     </div>
                   </div>
                   
@@ -604,6 +617,91 @@ export function CollegeDashboard() {
             {renderContent()}
           </div>
         </div>
+
+        {/* Add Company Modal */}
+        {showAddCompanyModal && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen px-4">
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={() => setShowAddCompanyModal(false)} />
+              <div className="bg-white rounded-lg p-6 w-full max-w-md relative">
+                <h3 className="text-lg font-semibold mb-4">Add Company Partnership</h3>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.target as HTMLFormElement);
+                  addCompanyPartnership({
+                    name: formData.get('name') as string,
+                    industry: formData.get('industry') as string,
+                    size: formData.get('size') as string,
+                    location: formData.get('location') as string,
+                    jobsPosted: 0,
+                    studentsHired: 0,
+                    partnershipType: 'Active Partner'
+                  });
+                  setShowAddCompanyModal(false);
+                }}>
+                  <div className="space-y-4">
+                    <input name="name" placeholder="Company Name" className="w-full p-2 border rounded" required />
+                    <input name="industry" placeholder="Industry" className="w-full p-2 border rounded" required />
+                    <input name="size" placeholder="Company Size" className="w-full p-2 border rounded" required />
+                    <input name="location" placeholder="Location" className="w-full p-2 border rounded" required />
+                  </div>
+                  <div className="flex space-x-4 mt-6">
+                    <button type="submit" className="flex-1 bg-orange-600 text-white py-2 rounded">Add Partnership</button>
+                    <button type="button" onClick={() => setShowAddCompanyModal(false)} className="flex-1 border py-2 rounded">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Post Job Modal */}
+        {showPostJobModal && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen px-4">
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75" onClick={() => setShowPostJobModal(false)} />
+              <div className="bg-white rounded-lg p-6 w-full max-w-lg relative">
+                <h3 className="text-lg font-semibold mb-4">Post New Job</h3>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.target as HTMLFormElement);
+                  postJob({
+                    title: formData.get('title') as string,
+                    company: formData.get('company') as string,
+                    type: formData.get('type') as 'full-time' | 'internship' | 'part-time',
+                    location: formData.get('location') as string,
+                    salary: formData.get('salary') as string,
+                    description: formData.get('description') as string,
+                    requirements: (formData.get('requirements') as string).split(',').map(r => r.trim()),
+                    postedDate: 'Today',
+                    applications: 0,
+                    status: 'active'
+                  });
+                  setShowPostJobModal(false);
+                }}>
+                  <div className="space-y-4">
+                    <input name="title" placeholder="Job Title" className="w-full p-2 border rounded" required />
+                    <input name="company" placeholder="Company Name" className="w-full p-2 border rounded" required />
+                    <select name="type" className="w-full p-2 border rounded" required>
+                      <option value="">Select Type</option>
+                      <option value="full-time">Full-time</option>
+                      <option value="internship">Internship</option>
+                      <option value="part-time">Part-time</option>
+                    </select>
+                    <input name="location" placeholder="Location" className="w-full p-2 border rounded" required />
+                    <input name="salary" placeholder="Salary/Stipend" className="w-full p-2 border rounded" required />
+                    <textarea name="description" placeholder="Job Description" className="w-full p-2 border rounded h-20" required />
+                    <input name="requirements" placeholder="Requirements (comma separated)" className="w-full p-2 border rounded" required />
+                  </div>
+                  <div className="flex space-x-4 mt-6">
+                    <button type="submit" className="flex-1 bg-orange-600 text-white py-2 rounded">Post Job</button>
+                    <button type="button" onClick={() => setShowPostJobModal(false)} className="flex-1 border py-2 rounded">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

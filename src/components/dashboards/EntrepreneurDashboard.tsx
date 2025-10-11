@@ -10,6 +10,7 @@ import {
 
 export function EntrepreneurDashboard() {
   const { user } = useAuth();
+  const { mentors, events, bookMentor, registerForEvent } = useData();
   const [activeSection, setActiveSection] = useState('overview');
 
   const stats = [
@@ -632,32 +633,73 @@ export function EntrepreneurDashboard() {
         return (
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <h2 className="text-xl font-bold text-gray-900 mb-6">👥 Mentorship</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {mentorshipOptions.map((option, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{option.type}</h3>
-                  <p className="text-gray-600 text-sm mb-4">{option.description}</p>
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Available:</span>
-                      <span className="font-medium text-green-600">
-                        {typeof option.available === 'number' ? `${option.available} mentors` : option.available}
-                      </span>
+            <div className="space-y-8">
+              {/* Available Mentors */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Expert Mentors</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {mentors.filter(mentor => mentor.expertise.includes('Technology') || mentor.expertise.includes('Business')).map((mentor) => (
+                    <div key={mentor.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h4 className="text-lg font-semibold text-gray-900 mb-1">{mentor.name}</h4>
+                          <p className="text-green-600 font-medium">{mentor.expertise}</p>
+                          <p className="text-gray-600 text-sm">{mentor.experience}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="flex items-center space-x-1 mb-1">
+                            <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                            <span className="font-medium">{mentor.rating}</span>
+                          </div>
+                          <p className="text-gray-600 text-sm">{mentor.sessions} sessions</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-green-600 font-medium">{mentor.price}</span>
+                        <button 
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                          onClick={() => bookMentor(mentor.id)}
+                          disabled={!mentor.available}
+                        >
+                          {mentor.available ? 'Book Session' : 'Unavailable'}
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Duration:</span>
-                      <span className="font-medium">{option.duration}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Price:</span>
-                      <span className="font-medium text-blue-600">{option.price}</span>
-                    </div>
-                  </div>
-                  <button className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors">
-                    Connect Now
-                  </button>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              {/* Mentorship Programs */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Mentorship Programs</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {mentorshipOptions.map((option, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">{option.type}</h4>
+                      <p className="text-gray-600 text-sm mb-4">{option.description}</p>
+                      <div className="space-y-2 mb-4">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Available:</span>
+                          <span className="font-medium text-green-600">
+                            {typeof option.available === 'number' ? `${option.available} mentors` : option.available}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Duration:</span>
+                          <span className="font-medium">{option.duration}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Price:</span>
+                          <span className="font-medium text-blue-600">{option.price}</span>
+                        </div>
+                      </div>
+                      <button className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors">
+                        Join Program
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -668,8 +710,8 @@ export function EntrepreneurDashboard() {
             <h2 className="text-xl font-bold text-gray-900 mb-6">💬 Community</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Founder Groups */}
-              <div>
+              {events.filter(event => event.type === 'webinar' || event.type === 'workshop').map((event) => (
+                <div key={event.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Founder Groups</h3>
                 <div className="space-y-4">
                   <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -710,18 +752,18 @@ export function EntrepreneurDashboard() {
                     <div className="flex-1">
                       <p className="font-medium text-gray-900">Arjun Startup</p>
                       <p className="text-sm text-gray-600">₹2Cr funding raised</p>
-                    </div>
+                        <h3 className="font-semibold text-gray-900">{event.title}</h3>
                     <Trophy className="w-5 h-5 text-yellow-500" />
                   </div>
                   
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                          event.type === 'hackathon' ? 'bg-purple-100 text-purple-800' :
                     <span className="w-8 h-8 bg-gray-100 text-gray-800 rounded-full flex items-center justify-center text-sm font-bold">2</span>
                     <div className="flex-1">
                       <p className="font-medium text-gray-900">Priya Tech</p>
                       <p className="text-sm text-gray-600">₹1.5Cr funding raised</p>
                     </div>
-                    <Award className="w-5 h-5 text-gray-500" />
-                  </div>
+                      <p className="text-gray-600 text-sm mb-1">{event.date} • {event.time}</p>
+                      <p className="text-gray-500 text-xs">{event.registrations}/{event.maxCapacity} registered</p>
                   
                   <div className="flex items-center space-x-3 p-3 bg-orange-50 rounded-lg">
                     <span className="w-8 h-8 bg-orange-100 text-orange-800 rounded-full flex items-center justify-center text-sm font-bold">3</span>
@@ -731,7 +773,7 @@ export function EntrepreneurDashboard() {
                     </div>
                     <Award className="w-5 h-5 text-orange-500" />
                   </div>
-                  
+                          registerForEvent(event.id);
                   <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
                     <span className="w-8 h-8 bg-green-100 text-green-800 rounded-full flex items-center justify-center text-sm font-bold">12</span>
                     <div className="flex-1">
